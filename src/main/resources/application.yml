@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: warehouse-inventory-reservation-service
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5433/inventory_db}
+    username: ${SPRING_DATASOURCE_USERNAME:app_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:secure_dev_password}
+    hikari:
+      maximum-pool-size: 50
+      minimum-idle: 10
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  threads:
+    virtual:
+      enabled: true
+  cache:
+    type: caffeine
+    caffeine:
+      spec: expireAfterWrite=30s,maximumSize=100,recordStats
+
+server:
+  port: 8080
+  shutdown: graceful
+
+app:
+  security:
+    api-keys: ${API_KEYS:dev-key-12345}
+  reservation:
+    expiry-minutes: 10
+  nats:
+    enabled: ${NATS_ENABLED:false}
+    url: ${NATS_URL:nats://localhost:4222}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized

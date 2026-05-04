@@ -1,0 +1,29 @@
+# Overlay for Advanced Track A: adds NATS JetStream
+# Usage: docker compose -f docker-compose.yml -f docker-compose.nats.yml up
+version: '3.9'
+
+services:
+  nats:
+    image: nats:2.10-alpine
+    command: ["-js", "--store_dir=/data", "-m", "8222"]
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "-O", "/dev/null", "http://localhost:8222/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    environment:
+      NATS_ENABLED: "true"
+      NATS_URL: nats://nats:4222
+    depends_on:
+      nats:
+        condition: service_healthy
+
+volumes:
+  nats_data:

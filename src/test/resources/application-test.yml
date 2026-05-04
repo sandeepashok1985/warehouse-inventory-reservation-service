@@ -1,0 +1,17 @@
+# Test profile — Testcontainers overrides datasource via @DynamicPropertySource
+spring:
+  liquibase:
+    enabled: true
+  jpa:
+    show-sql: true
+  cache:
+    type: caffeine
+    caffeine:
+      spec: expireAfterWrite=30s,maximumSize=100,recordStats
+app:
+  nats:
+    enabled: false
+  security:
+    api-keys: dev-key-12345
+  reservation:
+    expiry-minutes: 10

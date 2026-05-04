@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <include file="db/changelog/V001__create_products.sql"/>
+    <include file="db/changelog/V002__create_inventory.sql"/>
+    <include file="db/changelog/V003__create_reservations.sql"/>
+    <include file="db/changelog/V004__create_reservation_items.sql"/>
+    <include file="db/changelog/V005__create_reservation_events.sql"/>
+    <include file="db/changelog/V006__create_expiry_state.sql"/>
+    <include file="db/changelog/V007__seed_initial_products.sql"/>
+    <include file="db/changelog/V008__reservation_events_initial_partitions.sql"/>
+</databaseChangeLog>
