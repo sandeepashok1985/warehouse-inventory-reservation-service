@@ -315,7 +315,7 @@ Integration tests use Testcontainers for PostgreSQL and require Docker.
 | `OutboxRelayIntegrationTest` | Relay marks published events, unknown types are skipped |
 | `LiquibaseMigrationIntegrationTest` | All six tables present, seed data present |
 
-**Coverage target:** 70% instruction coverage (JaCoCo). The floor reflects deliberate exclusions: infrastructure wiring, Lombok-generated code, and conditional NATS beans.
+**Coverage target:** 80% instruction coverage (JaCoCo). The floor reflects deliberate exclusions: infrastructure wiring, Lombok-generated code, and conditional NATS beans. **Actual coverage: 81.8%.** Unit tests drive the majority; integration tests exercise the remaining HTTP and database paths across configuration classes not reachable from unit scope.
 
 ---
 
