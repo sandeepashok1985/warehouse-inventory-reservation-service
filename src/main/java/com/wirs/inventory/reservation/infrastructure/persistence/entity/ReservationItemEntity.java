@@ -12,7 +12,13 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** JPA entity mapping the reservation_items table. */
+/**
+ * JPA entity mapping the {@code reservation_items} table.
+ *
+ * Child table of {@link ReservationEntity}. Each row represents a single
+ * SKU line item within a reservation. Loaded lazily through the parent's
+ * {@code OneToMany} collection.
+ */
 @Entity
 @Table(name = "reservation_items")
 @Getter

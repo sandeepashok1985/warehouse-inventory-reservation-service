@@ -12,8 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Verifies that all required database tables exist and seed data is present.
- * Uses H2 in PostgreSQL compatibility mode — the information_schema queries
- * are adjusted accordingly.
+ * Uses PostgreSQL via Testcontainers.
  */
 @Tag("integration")
 class LiquibaseMigrationIntegrationTest extends BaseIntegrationTest {

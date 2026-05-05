@@ -19,6 +19,18 @@ public class SecurityConfig {
     @Value("${app.security.api-keys}")
     private String apiKeys;
 
+    /**
+     * Configures the security filter chain with stateless API key authentication.
+     *
+     * - CSRF disabled (stateless API)
+     * - Session creation policy set to {@code STATELESS}
+     * - Public paths: {@code /health}, Swagger UI, and OpenAPI docs
+     * - All other requests require a valid {@code X-API-Key} header
+     *
+     * @param http the {@link HttpSecurity} to configure
+     * @return the built {@link SecurityFilterChain}
+     * @throws Exception if the configuration fails
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         ApiKeyAuthenticationFilter filter = new ApiKeyAuthenticationFilter(apiKeys);

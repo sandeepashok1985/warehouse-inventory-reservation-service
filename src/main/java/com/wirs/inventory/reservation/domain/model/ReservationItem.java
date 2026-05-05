@@ -7,6 +7,14 @@ import lombok.Builder;
 @Builder
 public record ReservationItem(String sku, long quantity) {
 
+    /**
+     * Compact canonical constructor — validates invariants on every creation.
+     *
+     * @param sku      the SKU identifier; must not be null or blank
+     * @param quantity the quantity to reserve; must be positive
+     * @throws NullPointerException     if sku is null
+     * @throws IllegalArgumentException if sku is blank or quantity is not positive
+     */
     public ReservationItem {
         Objects.requireNonNull(sku, "SKU must not be null");
         if (sku.isBlank()) {

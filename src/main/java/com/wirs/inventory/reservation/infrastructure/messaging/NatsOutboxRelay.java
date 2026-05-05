@@ -62,6 +62,15 @@ public class NatsOutboxRelay {
         }
     }
 
+    /**
+     * Deserializes a {@link ReservationEventEntity} payload back into the correct
+     * {@link DomainEvent} subtype based on the stored {@code event_type}.
+     *
+     * @param entity the persisted event entity (must not be null)
+     * @return the reconstructed domain event
+     * @throws IOException if JSON deserialisation fails
+     * @throws IllegalArgumentException if the event type is unknown
+     */
     private DomainEvent reconstruct(ReservationEventEntity entity) throws IOException {
         return switch (entity.getEventType()) {
             case "CREATED" ->

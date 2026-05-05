@@ -123,6 +123,7 @@ public class GlobalExceptionHandler {
         return ApiResponse.error("INVALID_REQUEST", message);
     }
 
+    /** Converts the existing {@link Reservation} from a DuplicateOrderException into a response DTO. */
     private ReservationResponse toReservationResponse(DuplicateOrderException ex) {
         Reservation reservation = ex.getExistingReservation();
         List<ReservationItemResponse> items = reservation.getItems().stream()

@@ -46,6 +46,7 @@ public class AuditEventSubscriber implements DomainEventSubscriber {
         }
     }
 
+    /** Shortens the enum name for storage in the {@code event_type} column (e.g. RESERVATION_CREATED → CREATED). */
     private String abbreviateEventType(ReservationEventType eventType) {
         return switch (eventType) {
             case RESERVATION_CREATED   -> "CREATED";

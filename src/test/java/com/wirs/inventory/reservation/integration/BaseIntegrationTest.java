@@ -7,6 +7,7 @@ import com.wirs.inventory.reservation.infrastructure.persistence.repository.Rese
 import com.wirs.inventory.reservation.infrastructure.persistence.repository.ReservationJpaRepository;
 import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,10 +25,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * Base class for integration tests — starts a real PostgreSQL container via Testcontainers.
  *
- * <p>Requires Docker to be running. Integration tests are automatically skipped when Docker
- * is not available by setting {@code -DskipDockerTests=true}.
+ * Requires Docker to be running. Set {@code -DskipDockerTests=true} on the command line
+ * to disable all integration tests when Docker is not available.
+ *
+ * @see <a href="https://www.testcontainers.org/test_framework_integration/junit_5/">Testcontainers JUnit5 docs</a>
  */
 @Testcontainers
+@DisabledIfSystemProperty(named = "skipDockerTests", matches = "true", disabledReason = "Docker not available (skipDockerTests=true)")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -84,6 +88,10 @@ public abstract class BaseIntegrationTest {
             inv.setAvailableStock(inv.getTotalStock());
             inv.setReservedStock(0L);
             inventoryRepository.save(inv);
+        });
+        expiryStateRepository.findAll().forEach(state -> {
+            state.setProcessingInProgress(false);
+            expiryStateRepository.save(state);
         });
     }
 }

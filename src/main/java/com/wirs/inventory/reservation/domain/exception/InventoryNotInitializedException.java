@@ -6,6 +6,9 @@ package com.wirs.inventory.reservation.domain.exception;
  */
 public class InventoryNotInitializedException extends RuntimeException {
 
+    /**
+     * @param sku the SKU whose inventory record is missing
+     */
     public InventoryNotInitializedException(String sku) {
         super("Inventory record missing for SKU: " + sku
             + " — product exists but was never initialized in inventory");

@@ -9,7 +9,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** JPA entity mapping the products table. No business logic. */
+/**
+ * JPA entity mapping the {@code products} table.
+ *
+ * Serves as the read-only product catalog. Inventory records reference SKUs
+ * from this table via a foreign key. No business logic — purely a data holder.
+ */
 @Entity
 @Table(name = "products")
 @Getter

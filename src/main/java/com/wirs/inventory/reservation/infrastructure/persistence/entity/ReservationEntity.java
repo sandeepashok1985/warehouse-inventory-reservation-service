@@ -17,7 +17,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** JPA entity mapping the reservations table. */
+/**
+ * JPA entity mapping the {@code reservations} table.
+ *
+ * This is the primary persistence root for the {@link com.wirs.inventory.reservation.domain.model.Reservation}
+ * aggregate. Items are stored in a separate {@code reservation_items} table and
+ * loaded lazily via a {@link jakarta.persistence.OneToMany} relationship.
+ *
+ * Lifecycle callbacks ({@code prePersist}, {@code preUpdate}) automatically
+ * manage the {@code created_at} and {@code updated_at} timestamps.
+ */
 @Entity
 @Table(name = "reservations")
 @Getter
@@ -48,6 +57,7 @@ public class ReservationEntity {
                orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ReservationItemEntity> items = new ArrayList<>();
 
+    /** Sets audit timestamps before the first persist. */
     @PrePersist
     void prePersist() {
         if (createdAt == null) {
@@ -58,11 +68,19 @@ public class ReservationEntity {
         }
     }
 
+    /** Refreshes the updated-at timestamp before every entity update. */
     @PreUpdate
     void preUpdate() {
         updatedAt = Instant.now();
     }
 
+    /**
+     * Updates the reservation status and sets the updated-at timestamp atomically.
+     *
+     * @param newStatus the new status string (matches the DB CHECK constraint values)
+     * @param now       the current instant (provided by the caller to align with the
+     *                  application-level clock)
+     */
     public void updateStatus(String newStatus, Instant now) {
         this.status = newStatus;
         this.updatedAt = now;

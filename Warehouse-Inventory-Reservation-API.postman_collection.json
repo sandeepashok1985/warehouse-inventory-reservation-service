@@ -1,0 +1,1425 @@
+{
+	"info": {
+		"name": "Warehouse Inventory Reservation API",
+		"description": "Complete test collection for the Warehouse Inventory Reservation API.\n\n## Setup\n1. Import this collection into Postman\n2. Set the `baseUrl` collection variable (default: http://localhost:8080)\n3. Set the `apiKey` collection variable (default: dev-key-12345)\n4. Run requests individually or use the Collection Runner\n\n## Folders\n- **Happy Path** — All successful request scenarios\n- **Negative Scenarios** — Error & edge-case testing",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"version": "1.0.0"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "apiKey",
+			"value": "dev-key-12345",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Happy Path",
+			"description": "Successful request scenarios for all endpoints.",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response has STATUS and DATABASE fields', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json).to.have.property('STATUS');",
+									"    pm.expect(json).to.have.property('DATABASE');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Inventory by SKU — A100",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inventory/A100",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inventory", "A100"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('A100 has 1000 total stock', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.sku).to.eql('A100');",
+									"    pm.expect(json.data.totalStock).to.eql(1000);",
+									"    pm.expect(json.data.availableStock).to.eql(1000);",
+									"    pm.expect(json.data.reservedStock).to.eql(0);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Inventory by SKU — B200",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inventory/B200",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inventory", "B200"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('B200 has 500 total stock', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.sku).to.eql('B200');",
+									"    pm.expect(json.data.totalStock).to.eql(500);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Inventory by SKU — C300",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inventory/C300",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inventory", "C300"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('C300 has 250 total stock', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.sku).to.eql('C300');",
+									"    pm.expect(json.data.totalStock).to.eql(250);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Inventory by SKU — D400",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inventory/D400",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inventory", "D400"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('D400 has 750 total stock', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.sku).to.eql('D400');",
+									"    pm.expect(json.data.totalStock).to.eql(750);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Inventory by SKU — E500",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inventory/E500",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inventory", "E500"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('E500 has 100 total stock', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.sku).to.eql('E500');",
+									"    pm.expect(json.data.totalStock).to.eql(100);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List All Reservations",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?page=0&size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"description": "Page number (zero-based)"
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"description": "Page size (1-100)"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Response is paginated', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data).to.have.property('content');",
+									"    pm.expect(json.data).to.have.property('page');",
+									"    pm.expect(json.data).to.have.property('size');",
+									"    pm.expect(json.data).to.have.property('totalElements');",
+									"    pm.expect(json.data).to.have.property('totalPages');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List Reservations by Status (PENDING)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?page=0&size=10&status=PENDING",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "PENDING",
+									"description": "Filter by reservation status"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('All returned items are PENDING', () => {",
+									"    const json = pm.response.json();",
+									"    if (json.data.content.length > 0) {",
+									"        json.data.content.forEach(item => {",
+									"            pm.expect(item.status).to.eql('PENDING');",
+									"        });",
+									"    }",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List Reservations by Status (CONFIRMED)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?page=0&size=10&status=CONFIRMED",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "CONFIRMED"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "List Reservations by Status (CANCELLED)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?page=0&size=10&status=CANCELLED",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "status",
+									"value": "CANCELLED"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Reservation — Single Item (A100)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-PM-001\",\n  \"items\": [\n    {\n      \"sku\": \"A100\",\n      \"quantity\": 5\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201 Created', () => {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has reservation data with ID', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data).to.have.property('id');",
+									"    pm.expect(json.data.orderId).to.eql('ORD-PM-001');",
+									"    pm.expect(json.data.status).to.eql('PENDING');",
+									"    pm.expect(json.data.items).to.be.an('array').with.lengthOf(1);",
+									"});",
+									"",
+									"pm.test('Response has timestamps', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data).to.have.property('createdAt');",
+									"    pm.expect(json.data).to.have.property('expiresAt');",
+									"});",
+									"",
+									"pm.collectionVariables.set('reservationId', json.data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Reservation — Multiple Items (A100 + B200)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-PM-002\",\n  \"items\": [\n    {\n      \"sku\": \"A100\",\n      \"quantity\": 2\n    },\n    {\n      \"sku\": \"B200\",\n      \"quantity\": 3\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201 Created', () => {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Reservation has multiple items', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.items).to.be.an('array').with.lengthOf(2);",
+									"});",
+									"",
+									"pm.collectionVariables.set('reservationId2', json.data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Reservation — C300 (Large Qty)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-PM-003\",\n  \"items\": [\n    {\n      \"sku\": \"C300\",\n      \"quantity\": 100\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201 Created', () => {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('C300 reservation created', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.items[0].sku).to.eql('C300');",
+									"});",
+									"",
+									"pm.collectionVariables.set('reservationId3', json.data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Reservation — D400",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-PM-004\",\n  \"items\": [\n    {\n      \"sku\": \"D400\",\n      \"quantity\": 10\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201 Created', () => {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('D400 reservation created', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.items[0].sku).to.eql('D400');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create Reservation — E500",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-PM-005\",\n  \"items\": [\n    {\n      \"sku\": \"E500\",\n      \"quantity\": 2\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 201 Created', () => {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('E500 reservation created', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.items[0].sku).to.eql('E500');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get Reservation by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/{{reservationId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "{{reservationId}}"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Reservation ID matches', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.id).to.eql(pm.collectionVariables.get('reservationId'));",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Confirm Reservation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/confirm",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "{{reservationId}}", "confirm"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Reservation status is CONFIRMED', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.status).to.eql('CONFIRMED');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Cancel Reservation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/{{reservationId2}}/cancel",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "{{reservationId2}}", "cancel"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 200', () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test('Reservation status is CANCELLED', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.data.status).to.eql('CANCELLED');",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Set default collection variables if not already set",
+							"if (!pm.collectionVariables.get('reservationId')) {",
+							"    pm.collectionVariables.set('reservationId', '00000000-0000-0000-0000-000000000000');",
+							"}",
+							"if (!pm.collectionVariables.get('reservationId2')) {",
+							"    pm.collectionVariables.set('reservationId2', '00000000-0000-0000-0000-000000000000');",
+							"}"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Negative Scenarios",
+			"description": "Error cases and boundary testing for all endpoints.",
+			"item": [
+				{
+					"name": "[Validation] Missing Required 'page' Parameter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?size=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "size",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test('Response contains error details', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.error).to.have.property('code');",
+									"    pm.expect(json.error).to.have.property('message');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Validation] Missing Required 'size' Parameter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?page=0",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Validation] Size Exceeds Maximum (200 > 100)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?page=0&size=200",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "200"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Validation] Size Below Minimum (0 < 1)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations?page=0&size=0",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "0"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Reservation] Missing Required 'items' Field",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-ERR-MISSING-ITEMS\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Reservation] Missing 'orderId' Field",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"sku\": \"SKU-001\",\n      \"quantity\": 1\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Reservation] Empty Request Body",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Reservation] Zero Quantity (Violates Minimum=1)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-ERR-ZERO-QTY\",\n  \"items\": [\n    {\n      \"sku\": \"SKU-001\",\n      \"quantity\": 0\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Reservation] Negative Quantity",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-ERR-NEG-QTY\",\n  \"items\": [\n    {\n      \"sku\": \"SKU-001\",\n      \"quantity\": -5\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Reservation] Empty Items Array",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"orderId\": \"ORD-ERR-EMPTY-ITEMS\",\n  \"items\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[NotFound] Get Reservation — Non-existent UUID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/123e4567-e89b-12d3-a456-426614174000",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "123e4567-e89b-12d3-a456-426614174000"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404 Not Found', () => {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Error code is present', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.error).to.have.property('code');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[NotFound] Confirm Non-existent Reservation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/123e4567-e89b-12d3-a456-426614174000/confirm",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "123e4567-e89b-12d3-a456-426614174000", "confirm"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404 Not Found', () => {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[NotFound] Cancel Non-existent Reservation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/123e4567-e89b-12d3-a456-426614174000/cancel",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "123e4567-e89b-12d3-a456-426614174000", "cancel"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404 Not Found', () => {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[NotFound] Get Inventory — Non-existent SKU",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/inventory/DOES-NOT-EXIST",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "inventory", "DOES-NOT-EXIST"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 404 Not Found', () => {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test('Error code is SKU_NOT_FOUND', () => {",
+									"    const json = pm.response.json();",
+									"    pm.expect(json.error.code).to.eql('SKU_NOT_FOUND');",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Validation] Invalid UUID Format in Path",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/invalid-uuid-format",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "invalid-uuid-format"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 400 Bad Request', () => {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Conflict] Confirm Already Confirmed Reservation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/{{reservationId}}/confirm",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "{{reservationId}}", "confirm"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 409 Conflict', () => {",
+									"    pm.response.to.have.status(409);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Conflict] Cancel Already Cancelled Reservation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/{{reservationId2}}/cancel",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "{{reservationId2}}", "cancel"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 409 Conflict', () => {",
+									"    pm.response.to.have.status(409);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Conflict] Confirm Already Cancelled Reservation",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/reservations/{{reservationId2}}/confirm",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "reservations", "{{reservationId2}}", "confirm"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 409 Conflict', () => {",
+									"    pm.response.to.have.status(409);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Auth] Missing API Key",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401 or 403 Unauthorized', () => {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+									"});"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "[Auth] Invalid API Key",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "invalid-key-xyz"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status code is 401 or 403 Unauthorized', () => {",
+									"    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+									"});"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}

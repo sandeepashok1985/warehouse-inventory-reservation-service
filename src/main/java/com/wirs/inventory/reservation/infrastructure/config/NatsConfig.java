@@ -37,13 +37,20 @@ public class NatsConfig {
         return Nats.connect(options);
     }
 
-    /** Provides the JetStream context from the established connection. */
+    /**
+     * Provides the JetStream context from the established connection.
+     * Used by {@link NatsEventPublisher} to publish messages with deduplication.
+     */
     @Bean
     public JetStream jetStream(Connection connection) throws IOException {
         return connection.jetStream();
     }
 
-    /** Provides the JetStream management context for stream lifecycle operations. */
+    /**
+     * Provides the JetStream management context for stream lifecycle operations.
+     * Used by {@link com.wirs.inventory.reservation.infrastructure.messaging.NatsStreamInitializer}
+     * to create the RESERVATIONS stream on startup.
+     */
     @Bean
     public JetStreamManagement jetStreamManagement(Connection connection) throws IOException {
         return connection.jetStreamManagement();

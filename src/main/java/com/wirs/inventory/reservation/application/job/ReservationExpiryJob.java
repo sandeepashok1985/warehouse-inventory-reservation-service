@@ -102,7 +102,11 @@ public class ReservationExpiryJob {
     }
 
     private void expireSingleReservation(ReservationEntity entity) {
+        // Re-read with pessimistic lock to serialise concurrent expiry/cancel attempts.
+        // The initial query (findExpiredPendingReservations) reads without locks.
         ReservationEntity lockedEntity = reservationRepository.findByIdWithLock(entity.getId()).orElse(null);
+        // Defensive check: another instance may have cancelled or confirmed this
+        // reservation between the initial query and the lock acquisition.
         if (lockedEntity == null || !PendingState.getName().equals(lockedEntity.getStatus())) {
             return;
         }
@@ -118,6 +122,11 @@ public class ReservationExpiryJob {
         eventPublisher.publish(ReservationCancelledEvent.from(reservation, "TTL_EXPIRED", Instant.now(clock))); 
     }
 
+    /**
+     * Returns {@code true} if another instance is actively processing or crashed
+     * within the {@link #STUCK_FLAG_TIMEOUT_MINUTES} window. Prevents redundant
+     * processing when multiple instances race for the coordination lock.
+     */
     private boolean isBlockedByActiveJob(ExpiryStateEntity state) {
         if (!state.isProcessingInProgress()) {
             return false;
@@ -127,6 +136,11 @@ public class ReservationExpiryJob {
         return state.getLastExpiryRun().isAfter(stuckThreshold);
     }
 
+    /**
+     * Converts a JPA entity to a domain {@link Reservation} aggregate.
+     * Uses a direct mapping rather than {@link com.wirs.inventory.reservation.infrastructure.persistence.mapper.ReservationMapper}
+     * to avoid a circular dependency between the job and the persistence mapper.
+     */
     private Reservation toDomain(ReservationEntity entity) {
         List<ReservationItem> items = entity.getItems().stream()
             .map(i -> new ReservationItem(i.getSku(), i.getQuantity()))

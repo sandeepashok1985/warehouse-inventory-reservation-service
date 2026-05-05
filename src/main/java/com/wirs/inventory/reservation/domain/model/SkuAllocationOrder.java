@@ -11,7 +11,12 @@ import lombok.Builder;
 @Builder
 public record SkuAllocationOrder(List<ReservationItem> items) {
 
-    /** Factory — sorts items by SKU ascending before constructing the record. */
+    /**
+     * Factory — sorts items by SKU ascending before constructing the record.
+     *
+     * @param unsorted the items to sort; the caller's list is not mutated
+     * @return a new {@link SkuAllocationOrder} with items sorted by SKU alphabetically
+     */
     public static SkuAllocationOrder of(List<ReservationItem> unsorted) {
         return new SkuAllocationOrder(
             unsorted.stream()

@@ -17,10 +17,30 @@
     <version>1.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
+    <name>Warehouse Inventory Reservation Service</name>
+    <description>Hexagonal-architecture reservation service with NATS JetStream eventing
+        and Transactional Outbox pattern for warehouse inventory management.
+    </description>
+    <url>https://github.com/wirs/inventory-reservation-service</url>
+    <inceptionYear>2026</inceptionYear>
+
     <properties>
+        <!-- Encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <!-- Java version -->
         <java.version>21</java.version>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+
+        <!-- Dependency versions (not managed by spring-boot-starter-parent) -->
         <testcontainers.version>1.20.5</testcontainers.version>
         <jnats.version>2.17.6</jnats.version>
+        <springdoc-openapi.version>2.6.0</springdoc-openapi.version>
+        <logstash-encoder.version>7.4</logstash-encoder.version>
+        <docker-java.version>3.7.1</docker-java.version>
+        <jacoco.version>0.8.12</jacoco.version>
     </properties>
 
     <dependencyManagement>
@@ -36,6 +56,8 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- ==== Compile / Runtime ==== -->
+
         <!-- Core Spring Boot starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -58,7 +80,7 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- Spring Retry + AOP -->
+        <!-- Spring Retry + AOP (for @Retryable on optimistic-lock stock allocation) -->
         <dependency>
             <groupId>org.springframework.retry</groupId>
             <artifactId>spring-retry</artifactId>
@@ -68,7 +90,7 @@
             <artifactId>aspectjweaver</artifactId>
         </dependency>
 
-        <!-- Caching -->
+        <!-- Caching (Caffeine — health-check response cache) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
@@ -78,7 +100,7 @@
             <artifactId>caffeine</artifactId>
         </dependency>
 
-        <!-- Database -->
+        <!-- Database — PostgreSQL via Liquibase migrations -->
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
@@ -89,41 +111,42 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- OpenAPI / Swagger -->
+        <!-- OpenAPI / Swagger UI -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
+            <version>${springdoc-openapi.version}</version>
         </dependency>
 
-        <!-- Structured JSON logging -->
+        <!-- Structured JSON logging (ELK-compatible) -->
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>7.4</version>
+            <version>${logstash-encoder.version}</version>
         </dependency>
 
-        <!-- NATS JetStream -->
+        <!-- NATS JetStream messaging -->
         <dependency>
             <groupId>io.nats</groupId>
             <artifactId>jnats</artifactId>
             <version>${jnats.version}</version>
         </dependency>
 
-        <!-- Lombok — reduces boilerplate on entities, DTOs, and domain objects -->
+        <!-- Lombok (boilerplate reduction on entities, DTOs, domain objects) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
 
-        <!-- Test dependencies -->
+        <!-- ==== Test ==== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- H2 removed — all integration tests use Testcontainers (PostgreSQL) -->
+        <!-- Integration tests use Testcontainers with PostgreSQL (not H2) -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -134,7 +157,31 @@
             <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- NATS tests use GenericContainer from testcontainers:testcontainers artifact -->
+        <!-- GenericContainer used for NATS integration tests -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- docker-java override for Docker Desktop 29 compatibility -->
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-core</artifactId>
+            <version>${docker-java.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-httpclient5</artifactId>
+            <version>${docker-java.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.docker-java</groupId>
+            <artifactId>docker-java-transport-zerodep</artifactId>
+            <version>${docker-java.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -157,6 +204,19 @@
             <id>all-tests</id>
             <properties>
                 <groups>unit,integration</groups>
+            </properties>
+        </profile>
+        <profile>
+            <id>skip-docker</id>
+            <activation>
+                <property>
+                    <name>skipDockerTests</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <!-- Override groups to unit-only when Docker is unavailable -->
+                <groups>unit</groups>
             </properties>
         </profile>
     </profiles>
@@ -201,7 +261,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.12</version>
+                <version>${jacoco.version}</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>

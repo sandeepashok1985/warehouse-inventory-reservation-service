@@ -7,6 +7,9 @@ public class DuplicateOrderException extends RuntimeException {
 
     private final Reservation existingReservation;
 
+    /**
+     * @param existing the previously created reservation for the same orderId
+     */
     public DuplicateOrderException(Reservation existing) {
         super("Order already exists: " + existing.getOrderId());
         this.existingReservation = existing;

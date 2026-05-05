@@ -29,7 +29,24 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Application service for reservation lifecycle management. */
+/**
+ * Application service for reservation lifecycle management.
+ *
+ * Coordinates the full reservation workflow: creation with stock allocation,
+ * confirmation, cancellation with stock release, and read queries. Relies on
+ * {@link InventoryService} for stock mutations and {@link ReservationFactory}
+ * for domain aggregate construction. Domain events are published after every
+ * successful state change via {@link EventPublisher}.
+ *
+ * Uses pessimistic locking ({@code SELECT ... FOR UPDATE}) for confirm/cancel
+ * to safely serialise concurrent operations on the same reservation row, while
+ * the initial creation path relies on the {@code order_id} unique constraint for
+ * idempotency.
+ *
+ * @see InventoryService
+ * @see ReservationFactory
+ * @see EventPublisher
+ */
 @Service
 @Transactional
 public class ReservationService {
@@ -58,11 +75,16 @@ public class ReservationService {
      * Creates a new PENDING reservation and allocates stock.
      * Returns the existing reservation if orderId already exists (idempotent).
      *
+     * @param orderId the external order reference (must be unique)
+     * @param items   the line items to reserve
+     * @return the newly created (or existing) reservation
      * @throws InsufficientStockException
-     *     if any SKU lacks available stock.
+     *     if any SKU lacks available stock after all retry attempts.
      * @throws DuplicateOrderException if orderId already exists (mapped to HTTP 200).
      */
     public Reservation reserve(String orderId, List<ReservationItem> items) {
+        // Fast-path check: if orderId already exists, return the existing reservation
+        // as an idempotent success (HTTP 200) rather than failing.
         Optional<ReservationEntity> existing = reservationRepository.findByOrderId(orderId);
         if (existing.isPresent()) {
             throw new DuplicateOrderException(ReservationMapper.toDomain(existing.get()));
@@ -80,6 +102,9 @@ public class ReservationService {
             eventPublisher.publish(ReservationCreatedEvent.fromReservation(savedReservation, Instant.now(clock)));
             return savedReservation;
         } catch (DataIntegrityViolationException e) {
+            // Race condition recovery: two concurrent requests for the same orderId
+            // both passed the fast-path check above. The second INSERT hits the
+            // unique constraint. We query the winner and return the existing reservation.
             ReservationEntity winner = reservationRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalStateException(
                     "Unique constraint violated but reservation not found: " + orderId));
@@ -91,6 +116,8 @@ public class ReservationService {
     /**
      * Transitions a PENDING reservation to CONFIRMED.
      *
+     * @param reservationId the UUID of the reservation to confirm
+     * @return the confirmed reservation
      * @throws ReservationNotFoundException if the reservation does not exist.
      * @throws InvalidStateTransitionException
      *     if the reservation is not PENDING.
@@ -119,6 +146,8 @@ public class ReservationService {
     /**
      * Transitions a PENDING reservation to CANCELLED and releases held stock.
      *
+     * @param reservationId the UUID of the reservation to cancel
+     * @return the cancelled reservation
      * @throws ReservationNotFoundException if the reservation does not exist.
      * @throws com.wirs.inventory.reservation.domain.exception.InvalidStateTransitionException
      *     if the reservation is not PENDING.

@@ -29,7 +29,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** REST controller for reservation lifecycle operations. */
+/**
+ * REST controller for reservation lifecycle operations.
+ *
+ * Provides endpoints for creating (POST), confirming, cancelling, and querying
+ * reservations. All responses are wrapped in the standard {@link ApiResponse}
+ * envelope. Validation is handled by {@code jakarta.validation} annotations on
+ * the request DTOs.
+ */
 @RestController
 @RequestMapping("/api/v1/reservations")
 public class ReservationController {

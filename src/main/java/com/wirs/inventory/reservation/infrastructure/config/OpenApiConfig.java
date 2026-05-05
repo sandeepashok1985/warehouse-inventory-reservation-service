@@ -11,6 +11,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
+    /**
+     * Provides the OpenAPI 3 specification document with API key security scheme.
+     *
+     * @return the configured {@link OpenAPI} instance
+     */
     @Bean
     public OpenAPI inventoryReservationApi() {
         return new OpenAPI()

@@ -161,10 +161,12 @@ class ConcurrentReservationIntegrationTest extends BaseIntegrationTest {
 
     @Test
     void concurrentConfirmAndCancel_exactlyOneSucceeds() throws Exception {
+        // Insert a reservation directly — bypasses stock allocation so the confirm
+        // path does not need inventory to be pre-seeded with a specific balance.
         var entity = new ReservationEntity();
         var resId = UUID.randomUUID();
         entity.setId(resId);
-        entity.setOrderId("ORD-CC-CONFIRM");
+        entity.setOrderId("ORD-CC-CONFIRM-CANCEL");
         entity.setStatus("PENDING");
         entity.setCreatedAt(Instant.now());
         entity.setUpdatedAt(Instant.now());
@@ -183,29 +185,56 @@ class ConcurrentReservationIntegrationTest extends BaseIntegrationTest {
         var ok = new AtomicInteger();
         var conflict = new AtomicInteger();
 
-        Runnable task = () -> {
+        // Each thread uses its own RestTemplate instance to avoid synchronized serialization
+        // and achieve true concurrent server-side contention on the pessimistic lock.
+        java.util.function.Supplier<org.springframework.web.client.RestTemplate> templateFactory = () -> {
+            var t = new org.springframework.web.client.RestTemplate();
+            t.setErrorHandler(new org.springframework.web.client.DefaultResponseErrorHandler() {
+                @Override
+                protected boolean hasError(@org.springframework.lang.NonNull org.springframework.http.HttpStatusCode code) {
+                    return code.is5xxServerError();
+                }
+            });
+            return t;
+        };
+
+        // Thread 1 confirms; thread 2 cancels — exactly one will win the SELECT FOR UPDATE
+        Runnable confirmTask = () -> {
             ready.countDown();
             try {
                 start.await();
-                var response = exchange(
+                var response = templateFactory.get().exchange(
                     baseUrl() + "/api/v1/reservations/" + resId + "/confirm",
                     HttpMethod.POST,
-                    new HttpEntity<>(AUTH_HEADERS));
-                var code = response.getStatusCode();
-                if (code == HttpStatus.OK) {
-                    ok.incrementAndGet();
-                } else if (code == HttpStatus.CONFLICT) {
-                    conflict.incrementAndGet();
-                }
+                    new HttpEntity<>(AUTH_HEADERS),
+                    JsonNode.class);
+                if (response.getStatusCode() == HttpStatus.OK) ok.incrementAndGet();
+                else if (response.getStatusCode() == HttpStatus.CONFLICT) conflict.incrementAndGet();
             } catch (Exception e) {
-                // Task failed — will be detected by assertions below
+                // will be caught by assertions
+            }
+        };
+
+        Runnable cancelTask = () -> {
+            ready.countDown();
+            try {
+                start.await();
+                var response = templateFactory.get().exchange(
+                    baseUrl() + "/api/v1/reservations/" + resId + "/cancel",
+                    HttpMethod.POST,
+                    new HttpEntity<>(AUTH_HEADERS),
+                    JsonNode.class);
+                if (response.getStatusCode() == HttpStatus.OK) ok.incrementAndGet();
+                else if (response.getStatusCode() == HttpStatus.CONFLICT) conflict.incrementAndGet();
+            } catch (Exception e) {
+                // will be caught by assertions
             }
         };
 
         var executor = Executors.newFixedThreadPool(2);
         try {
-            var f1 = CompletableFuture.runAsync(task, executor);
-            var f2 = CompletableFuture.runAsync(task, executor);
+            var f1 = CompletableFuture.runAsync(confirmTask, executor);
+            var f2 = CompletableFuture.runAsync(cancelTask, executor);
             ready.await(5, TimeUnit.SECONDS);
             start.countDown();
             CompletableFuture.allOf(f1, f2).get(10, TimeUnit.SECONDS);
@@ -213,11 +242,11 @@ class ConcurrentReservationIntegrationTest extends BaseIntegrationTest {
             executor.shutdown();
         }
 
-        assertThat(ok.get()).as("exactly one confirm should succeed").isEqualTo(1);
-        assertThat(conflict.get()).as("the other should get invalid state transition")
-            .isEqualTo(1);
+        assertThat(ok.get()).as("exactly one of confirm/cancel should succeed").isEqualTo(1);
+        assertThat(conflict.get()).as("the other should get invalid state transition").isEqualTo(1);
 
         var updated = reservationRepository.findById(resId).orElseThrow();
-        assertThat(updated.getStatus()).isEqualTo("CONFIRMED");
+        assertThat(updated.getStatus()).as("final status is terminal")
+            .isIn("CONFIRMED", "CANCELLED");
     }
 }

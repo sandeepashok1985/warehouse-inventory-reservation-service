@@ -10,7 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** REST controller for inventory stock level queries. */
+/**
+ * REST controller for inventory stock level queries.
+ *
+ * Exposes a read-only endpoint to retrieve current stock levels for a given
+ * SKU. All responses use the standard {@link ApiResponse} envelope.
+ */
 @RestController
 @RequestMapping("/api/v1/inventory")
 public class InventoryController {

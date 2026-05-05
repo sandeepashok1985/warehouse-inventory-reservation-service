@@ -30,6 +30,13 @@ public record ReservationCreatedEvent(
         return ReservationEventType.RESERVATION_CREATED;
     }
 
+    /**
+     * Creates a {@link ReservationCreatedEvent} from a domain reservation.
+     *
+     * @param reservation the source reservation (must not be null)
+     * @param occurredAt  the timestamp when the event occurred
+     * @return a new event instance with data copied from the reservation
+     */
     public static ReservationCreatedEvent fromReservation(Reservation reservation, Instant occurredAt) {
         return ReservationCreatedEvent.builder()
             .reservationId(reservation.getId())

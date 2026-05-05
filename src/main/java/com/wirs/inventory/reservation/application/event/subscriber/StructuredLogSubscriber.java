@@ -17,6 +17,9 @@ public class StructuredLogSubscriber implements DomainEventSubscriber {
 
     @Override
     public void on(DomainEvent event) {
+        // Each event subtype carries different context for logging.
+        // Pattern matching instanceof extracts the subtype-specific fields
+        // (orderId, reason) without casting.
         if (event instanceof ReservationCreatedEvent created) {
             log.info("Reservation state transition: eventType={}, reservationId={}, orderId={}, "
                 + "occurredAt={}, triggeredBy=API",

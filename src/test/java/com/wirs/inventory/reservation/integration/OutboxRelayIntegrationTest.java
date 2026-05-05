@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Verifies the core outbox relay behavior using H2.
+ * Verifies the core outbox relay behavior using PostgreSQL via Testcontainers.
  * NATS-specific integration tests (Chunk 20) require a running NATS server.
  */
 @Tag("integration")

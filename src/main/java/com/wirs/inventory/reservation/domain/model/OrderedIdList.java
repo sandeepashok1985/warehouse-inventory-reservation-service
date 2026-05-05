@@ -11,7 +11,12 @@ import lombok.Builder;
 @Builder
 public record OrderedIdList(List<UUID> ids) {
 
-    /** Factory — sorts IDs by natural UUID order (lexicographic) before constructing the record. */
+    /**
+     * Factory — sorts IDs by natural UUID order (lexicographic) before constructing the record.
+     *
+     * @param unsorted the UUIDs to sort; the caller's list is not mutated
+     * @return a new {@link OrderedIdList} with IDs sorted lexicographically
+     */
     public static OrderedIdList of(List<UUID> unsorted) {
         return new OrderedIdList(
             unsorted.stream()

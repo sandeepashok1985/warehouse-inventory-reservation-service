@@ -13,7 +13,15 @@ import org.springframework.context.annotation.Configuration;
 @EnableCaching
 public class CacheConfig {
 
-    /** Health-check responses cached for 30 seconds to absorb DoS-style polling. */
+    /**
+     * Creates a Caffeine-based cache manager with a 30-second write expiry.
+     *
+     * The health-check response is cached to protect the database from
+     * DoS-style polling. A maximum of 100 entries prevents unbounded memory
+     * growth. Cache statistics are recorded for monitoring.
+     *
+     * @return the configured {@link CacheManager}
+     */
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager manager = new CaffeineCacheManager();

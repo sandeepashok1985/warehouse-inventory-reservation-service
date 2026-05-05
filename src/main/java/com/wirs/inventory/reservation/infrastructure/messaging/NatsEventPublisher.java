@@ -79,6 +79,7 @@ public class NatsEventPublisher implements DomainEventSubscriber, DisposableBean
         };
     }
 
+    /** Builds a NATS message envelope with deduplication ID from the domain event. */
     private NatsPayload buildNatsMessage(DomainEvent event) {
         String orderId = switch (event) {
             case ReservationCreatedEvent e   -> e.orderId();

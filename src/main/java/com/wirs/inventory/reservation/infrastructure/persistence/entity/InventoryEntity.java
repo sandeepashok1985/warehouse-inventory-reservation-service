@@ -42,6 +42,8 @@ public class InventoryEntity {
      * @throws InsufficientStockException if available stock is less than qty
      */
     public void allocateReserved(long qty) {
+        // Defensive check: caller must verify stock availability before calling.
+        // This throws if a concurrent optimistic-lock retry loop exhausted attempts.
         if (availableStock < qty) {
             throw new InsufficientStockException(sku, qty, availableStock);
         }
@@ -56,6 +58,8 @@ public class InventoryEntity {
      * @throws IllegalStateException if reserved stock is less than qty
      */
     public void releaseReserved(long qty) {
+        // Defensive check: reserved stock should always be >= release quantity.
+        // If this fails, it indicates a logic error (double-release or mismatched item).
         if (reservedStock < qty) {
             throw new IllegalStateException(
                 "Cannot release %d units for SKU %s — only %d are reserved".formatted(qty, sku, reservedStock));

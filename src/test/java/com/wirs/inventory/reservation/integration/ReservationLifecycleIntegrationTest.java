@@ -14,7 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 
 /**
- * Full lifecycle integration tests using H2 in-memory database.
+ * Full lifecycle integration tests using PostgreSQL via Testcontainers.
  * Verifies the complete reservation flow: create → confirm → cancel,
  * plus idempotency, validation, and outbox event persistence.
  */
@@ -33,7 +33,7 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
     void createReservation_returns201WithPendingStatus() {
         var response = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-001", "A100", 10),
+            buildReserveRequest("ORD-IT-001", "A100", 10),
             JsonNode.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
@@ -47,7 +47,7 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
     void createAndConfirmReservation_fullLifecycle() {
         var createResp = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-002", "A100", 10),
+            buildReserveRequest("ORD-IT-002", "A100", 10),
             JsonNode.class);
         assertThat(createResp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 
@@ -73,7 +73,7 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
     void createAndCancelReservation_stockRestored() {
         var createResp = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-003", "A100", 30),
+            buildReserveRequest("ORD-IT-003", "A100", 30),
             JsonNode.class);
         var id = createResp.getBody().get("data").get("id").asText();
 
@@ -92,7 +92,7 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
     void confirmAlreadyConfirmed_returns409WithInvalidStateTransition() {
         var createResp = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-004", "A100", 5),
+            buildReserveRequest("ORD-IT-004", "A100", 5),
             JsonNode.class);
         var id = createResp.getBody().get("data").get("id").asText();
 
@@ -110,14 +110,14 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
     void duplicateOrderId_returns200WithExistingReservation() {
         var first = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-DUP", "A100", 5),
+            buildReserveRequest("ORD-IT-DUP", "A100", 5),
             JsonNode.class);
         assertThat(first.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         var firstId = first.getBody().get("data").get("id").asText();
 
         var second = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-DUP", "A100", 5),
+            buildReserveRequest("ORD-IT-DUP", "A100", 5),
             JsonNode.class);
         assertThat(second.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(second.getBody().get("data").get("id").asText()).isEqualTo(firstId);
@@ -135,7 +135,7 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
     void reserveWithInsufficientStock_returns409() {
         var response = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-OVER", "A100", 9999),
+            buildReserveRequest("ORD-IT-OVER", "A100", 9999),
             JsonNode.class);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody().get("error").get("code").asText())
@@ -145,7 +145,7 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
     @Test
     void security_missingApiKey_returns401() {
         var body = Map.<String, Object>of(
-            "orderId", "ORD-H2-AUTH",
+            "orderId", "ORD-IT-AUTH",
             "items", List.of(Map.of("sku", "A100", "quantity", 1))
         );
         // Use Apache HttpClient to avoid JDK HttpRetryException on 401 responses
@@ -180,7 +180,7 @@ class ReservationLifecycleIntegrationTest extends BaseIntegrationTest {
 
         var response = restTemplate.exchange(
             "/api/v1/reservations", HttpMethod.POST,
-            buildReserveRequest("ORD-H2-EXP", "B200", 20),
+            buildReserveRequest("ORD-IT-EXP", "B200", 20),
             JsonNode.class);
         var id = UUID.fromString(response.getBody().get("data").get("id").asText());
 

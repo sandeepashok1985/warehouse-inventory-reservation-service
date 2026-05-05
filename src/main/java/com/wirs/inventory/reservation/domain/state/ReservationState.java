@@ -25,7 +25,10 @@ public abstract class ReservationState {
     /**
      * Reconstructs a state instance from its persisted string name.
      *
-     * @throws IllegalArgumentException if the status string does not match a known state.
+     * @param status the persisted status string (one of {@code PENDING},
+     *               {@code CONFIRMED}, or {@code CANCELLED})
+     * @return the corresponding state instance
+     * @throws IllegalArgumentException if the status string does not match a known state
      */
     public static ReservationState fromString(String status) {
         return switch (status) {

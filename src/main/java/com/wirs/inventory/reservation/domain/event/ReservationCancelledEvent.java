@@ -27,6 +27,14 @@ public record ReservationCancelledEvent(
         return ReservationEventType.RESERVATION_CANCELLED;
     }
 
+    /**
+     * Creates a {@link ReservationCancelledEvent} from a domain reservation.
+     *
+     * @param reservation the source reservation (must not be null)
+     * @param reason      the cancellation reason (e.g., "API" or "TTL_EXPIRED")
+     * @param occurredAt  the timestamp when the event occurred
+     * @return a new event instance with data copied from the reservation
+     */
     public static ReservationCancelledEvent from(Reservation reservation, String reason, Instant occurredAt) {
         return ReservationCancelledEvent.builder()
             .reservationId(reservation.getId())

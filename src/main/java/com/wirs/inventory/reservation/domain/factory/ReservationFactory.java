@@ -13,8 +13,8 @@ import java.util.UUID;
  * Factory for creating new {@link Reservation} aggregates with the correct initial state,
  * ID generation, and expiry time.
  *
- * <p>Encapsulates the reservation construction logic that requires a {@link Clock} and
- * expiry configuration — the domain model itself stays stateless and testable with fixed time.</p>
+ * Encapsulates the reservation construction logic that requires a {@link Clock} and
+ * expiry configuration — the domain model itself stays stateless and testable with fixed time.
  */
 public class ReservationFactory {
 

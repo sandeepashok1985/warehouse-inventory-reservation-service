@@ -15,6 +15,8 @@ public record Inventory(
     /**
      * Compact canonical constructor — validates the stock balance invariant
      * on every creation.
+     *
+     * @throws AssertionError if {@code totalStock != availableStock + reservedStock}
      */
     public Inventory {
         if (totalStock != availableStock + reservedStock) {

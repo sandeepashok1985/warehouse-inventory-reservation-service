@@ -34,11 +34,17 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         this.validApiKeys = Set.of(apiKeysRaw.split(","));
     }
 
+    /** Skips authentication for whitelisted public paths (health, Swagger, OpenAPI). */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return PUBLIC_PATHS.stream().anyMatch(p -> PATH_MATCHER.match(p, request.getRequestURI()));
     }
 
+    /**
+     * Validates the {@code X-API-Key} header against the configured set of keys.
+     * On failure, returns HTTP 401 with a JSON error body; on success, sets a
+     * {@link PreAuthenticatedAuthenticationToken} in the security context.
+     */
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,

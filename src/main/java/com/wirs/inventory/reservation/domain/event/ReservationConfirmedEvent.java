@@ -26,6 +26,13 @@ public record ReservationConfirmedEvent(
         return ReservationEventType.RESERVATION_CONFIRMED;
     }
 
+    /**
+     * Creates a {@link ReservationConfirmedEvent} from a domain reservation.
+     *
+     * @param reservation the source reservation (must not be null)
+     * @param occurredAt  the timestamp when the event occurred
+     * @return a new event instance with data copied from the reservation
+     */
     public static ReservationConfirmedEvent fromReservation(Reservation reservation, Instant occurredAt) {
         return ReservationConfirmedEvent.builder()
             .reservationId(reservation.getId())

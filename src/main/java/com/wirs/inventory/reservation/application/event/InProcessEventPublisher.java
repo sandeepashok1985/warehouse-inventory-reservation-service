@@ -13,7 +13,10 @@ public class InProcessEventPublisher implements EventPublisher {
 
     private final List<DomainEventSubscriber> subscribers;
 
-    /** Spring injects all DomainEventSubscriber beans via List injection. */
+    /**
+     * Spring injects all {@link DomainEventSubscriber} beans via List injection.
+     * The list is defensively copied to prevent mutation after construction.
+     */
     public InProcessEventPublisher(List<DomainEventSubscriber> subscribers) {
         this.subscribers = List.copyOf(subscribers);
     }

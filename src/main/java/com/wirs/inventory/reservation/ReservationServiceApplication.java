@@ -6,7 +6,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.retry.annotation.EnableRetry;
 
-/** Entry point for the Warehouse Inventory Reservation Service. */
+/**
+ * Entry point for the Warehouse Inventory Reservation Service.
+ *
+ * Bootstraps the Spring Boot application with:
+ * - {@link EnableConfigurationProperties} — binds {@code app.reservation.*} properties
+ * - {@link EnableRetry} — enables {@code @Retryable} for optimistic-lock retries
+ */
 @SpringBootApplication
 @EnableConfigurationProperties(ReservationExpiryConfig.class)
 @EnableRetry
