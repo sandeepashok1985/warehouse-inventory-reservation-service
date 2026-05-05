@@ -1,0 +1,35 @@
+@startuml
+participant "Scheduler" as Sched
+participant "Instance A\n(winner)" as A
+participant "Instance B\n(loser)" as B
+participant "PostgreSQL\nreservation_expiry_state" as DB
+participant "ReservationJpaRepository" as RR
+participant "InventoryService" as IS
+
+Sched -> A: @Scheduled(fixedDelay=120000)
+Sched -> B: @Scheduled(fixedDelay=120000)
+
+A -> DB: SELECT FOR UPDATE SKIP LOCKED
+B -> DB: SELECT FOR UPDATE SKIP LOCKED
+DB --> B: empty (row locked by A)
+note right of B: Returns immediately
+B --> Sched: skip this cycle
+
+DB --> A: coordination row
+A -> A: processingInProgress = true
+A -> A: findExpiredPendingReservations(now)
+
+loop for each expired reservation
+  A -> RR: findByIdWithLock(id)
+  RR --> A: ReservationEntity
+  A -> A: toDomain + cancel()
+  A -> IS: releaseStock(items)
+  A -> A: updateStatus(CANCELLED)
+  A -> A: publish ReservationCancelledEvent
+end
+
+A -> A: processingInProgress = false
+A -> DB: save coordination row
+note right of A: Next @Scheduled trigger
+A --> Sched: done
+@enduml

@@ -16,45 +16,7 @@ This problem forces genuine architectural decisions rather than academic ones. T
 
 ## 2. Architecture Overview
 
-```plantuml
-@startuml
-package "API Layer" as api {
-  [HealthController]
-  [InventoryController]
-  [ReservationController]
-  [GlobalExceptionHandler]
-  [ApiKeyAuthenticationFilter]
-}
-package "Application Layer" as app {
-  [InventoryService]
-  [ReservationService]
-  [ReservationExpiryJob]
-  [InProcessEventPublisher]
-  [ReservationEventRelay]
-}
-package "Domain Layer" as domain {
-  [Reservation]
-  [Inventory]
-  [ReservationState]
-  [ReservationFactory]
-  [ReservationItem]
-}
-package "Infrastructure Layer" as infra {
-  [JPA Entities]
-  [Spring Data Repositories]
-  [ReservationMapper]
-  [NatsEventPublisher]
-  [NatsOutboxRelay]
-  [ClockConfig]
-  [SecurityConfig]
-}
-
-api --> app
-app --> domain
-infra --> domain
-infra --> app
-@enduml
-```
+![Architecture layers diagram](docs/diagrams/architecture.svg)
 
 The codebase follows a hexagonal layout with four layers and strict one-way dependencies:
 
@@ -84,92 +46,15 @@ This is not ideology. The concrete payoff: domain unit tests run in milliseconds
 
 **Reservation creation (happy path):**
 
-```plantuml
-@startuml
-actor Client
-participant "ReservationController" as RC
-participant "ReservationService" as RS
-participant "ReservationFactory" as RF
-participant "InventoryService" as IS
-participant "InventoryJpaRepository" as IR
-participant "ReservationJpaRepository" as RR
-participant "EventPublisher" as EP
-
-Client -> RC: POST /api/v1/reservations\n{orderId, items}
-RC -> RS: reserve(orderId, items)
-RS -> RR: findByOrderId(orderId)
-RR --> RS: empty
-RS -> RF: createPendingReservation(orderId, items)
-RF --> RS: Reservation (PENDING)
-RS -> IS: allocateStock(SkuAllocationOrder)
-IS -> IR: findById(sku) / save(entity)
-IS --> RS: done
-RS -> RR: save(ReservationEntity)
-RR --> RS: ReservationEntity
-RS -> EP: publish(ReservationCreatedEvent)
-EP --> RS: logged + persisted
-RS --> RC: ReservationResponse
-RC --> Client: 201 Created
-@enduml
-```
+![Reservation creation sequence diagram](docs/diagrams/reservation-create.svg)
 
 **Confirm flow:**
 
-```plantuml
-@startuml
-actor Client
-participant "ReservationController" as RC
-participant "ReservationService" as RS
-participant "ReservationJpaRepository" as RR
-participant "Reservation" as Domain
-participant "EventPublisher" as EP
-
-Client -> RC: POST /api/v1/reservations/{id}/confirm
-RC -> RS: confirm(id)
-RS -> RR: findByIdWithLock(id)\n(SELECT FOR UPDATE)
-RR --> RS: ReservationEntity
-RS -> RS: toDomain(entity)
-RS -> Domain: confirm()
-Domain --> RS: state = CONFIRMED
-RS -> RR: updateStatus("CONFIRMED")
-RS -> EP: publish(ReservationConfirmedEvent)
-EP --> RS: logged + persisted
-RS --> RC: ReservationResponse
-RC --> Client: 200 OK
-@enduml
-```
+![Reservation confirmation sequence diagram](docs/diagrams/reservation-confirm.svg)
 
 **Cancel flow (with stock release):**
 
-```plantuml
-@startuml
-actor Client
-participant "ReservationController" as RC
-participant "ReservationService" as RS
-participant "ReservationJpaRepository" as RR
-participant "InventoryService" as IS
-participant "InventoryJpaRepository" as IR
-participant "Reservation" as Domain
-participant "EventPublisher" as EP
-
-Client -> RC: POST /api/v1/reservations/{id}/cancel
-RC -> RS: cancel(id)
-RS -> RR: findByIdWithLock(id)\n(SELECT FOR UPDATE)
-RR --> RS: ReservationEntity
-RS -> RS: toDomain(entity)
-RS -> Domain: cancel()
-Domain --> RS: state = CANCELLED
-RS -> IS: releaseStock(items)
-IS -> IR: findBySkuWithLock(sku)\n(SELECT FOR UPDATE)
-IS -> IR: save(entity)
-IS --> RS: done
-RS -> RR: updateStatus("CANCELLED")
-RS -> EP: publish(ReservationCancelledEvent)
-EP --> RS: logged + persisted
-RS --> RC: ReservationResponse
-RC --> Client: 200 OK
-@enduml
-```
+![Reservation cancellation sequence diagram](docs/diagrams/reservation-cancel.svg)
 
 ---
 
@@ -189,18 +74,7 @@ Quarkus excels at native compilation and sub-100ms startup — neither is a prim
 
 `Reservation.confirm()` is three lines: call `state.confirm()`, assign the result, update the timestamp. No `if (status == PENDING)` anywhere. `PendingState` knows it can confirm. `ConfirmedState` knows it cannot. The rule lives in the state object, not scattered across conditionals. Adding a fourth state requires one new class and zero changes to existing state classes or the aggregate.
 
-```plantuml
-@startuml
-[*] --> PENDING : reserve()
-PENDING --> CONFIRMED : confirm()
-PENDING --> CANCELLED : cancel() / expire()
-CONFIRMED --> [*]
-CANCELLED --> [*]
-note right of PENDING : Can confirm or cancel
-note right of CONFIRMED : Terminal — no further transitions
-note right of CANCELLED : Terminal — no further transitions
-@enduml
-```
+![Reservation state machine diagram](docs/diagrams/state-machine.svg)
 
 **Factory Pattern** — `com.wirs.inventory.reservation.domain.factory.ReservationFactory`
 
@@ -291,55 +165,7 @@ Two relay components ensure delivery:
 
 When `app.nats.enabled=true`, `NatsEventPublisher` joins the subscriber chain. The diagram below shows the end-to-end event flow from HTTP request to downstream consumers:
 
-```plantuml
-@startuml
-actor Client
-participant "ReservationService" as RS
-participant "ReservationJpaRepository" as RR
-participant "InProcessEventPublisher" as IPEP
-participant "AuditEventSubscriber" as Audit
-participant "NatsEventPublisher" as NATS
-participant "JetStream\nRESERVATIONS" as JS
-participant "Downstream\nConsumer A" as ConsA
-participant "Downstream\nConsumer B" as ConsB
-
-Client -> RS: POST /api/v1/reservations
-group @Transactional boundary
-  RS -> RR: save(ReservationEntity + items)
-  RS -> IPEP: publish(event)
-  IPEP -> Audit: on(event)
-  Audit -> RR: save(ReservationEventEntity)
-  IPEP -> NATS: on(event)
-  note right of NATS: catches IOException — never throws
-  NATS -> JS: jetStream.publish(subject, payload,\n  messageId=reservationId+eventType)
-  JS --> NATS: PublishAck
-  note right of JS: 2-minute dedup window
-end
-RR --> RS: commit (all-or-nothing)
-
-RS --> Client: 201 Created
-
-|||
-== After commit (separate consumer thread) ==
-
-JS -> ConsA: deliver (AckExplicit)
-ConsA --> JS: ACK
-JS -> ConsB: deliver (AckExplicit)
-ConsB --> JS: ACK
-
-|||
-== Outbox Recovery (if NATS was down) ==
-
-participant "NatsOutboxRelay" as Relay
-
-Relay -> RR: findTop50ByPublishedAtIsNull()
-RR --> Relay: unpublished events
-Relay -> NATS: reconstruct + publish
-NATS -> JS: jetStream.publish(retry)
-JS --> NATS: PublishAck
-Relay -> RR: SET published_at = now
-@enduml
-```
+![NATS JetStream event flow diagram](docs/diagrams/nats-jetstream.svg)
 
 **Subject mapping:**
 
@@ -381,43 +207,7 @@ This was not implemented because the database-only approach is sufficient for th
 
 **Multi-instance coordination:** A single-row table `reservation_expiry_state` with a `processing_in_progress` flag. Multiple service instances race to acquire the row lock via `SELECT ... FOR UPDATE SKIP LOCKED`. Only the winner proceeds; all others return in microseconds.
 
-```plantuml
-@startuml
-participant "Scheduler" as Sched
-participant "Instance A\n(winner)" as A
-participant "Instance B\n(loser)" as B
-participant "PostgreSQL\nreservation_expiry_state" as DB
-participant "ReservationJpaRepository" as RR
-participant "InventoryService" as IS
-
-Sched -> A: @Scheduled(fixedDelay=120000)
-Sched -> B: @Scheduled(fixedDelay=120000)
-
-A -> DB: SELECT FOR UPDATE SKIP LOCKED
-B -> DB: SELECT FOR UPDATE SKIP LOCKED
-DB --> B: empty (row locked by A)
-note right of B: Returns immediately
-B --> Sched: skip this cycle
-
-DB --> A: coordination row
-A -> A: processingInProgress = true
-A -> A: findExpiredPendingReservations(now)
-
-loop for each expired reservation
-  A -> RR: findByIdWithLock(id)
-  RR --> A: ReservationEntity
-  A -> A: toDomain + cancel()
-  A -> IS: releaseStock(items)
-  A -> A: updateStatus(CANCELLED)
-  A -> A: publish ReservationCancelledEvent
-end
-
-A -> A: processingInProgress = false
-A -> DB: save coordination row
-note right of A: Next @Scheduled trigger
-A --> Sched: done
-@enduml
-```
+![Expiry job multi-instance coordination diagram](docs/diagrams/expiry-job.svg)
 
 **Stuck-job detection:** If `processing_in_progress = TRUE` and `last_expiry_run` is more than 5 minutes old, the flag is considered stale (the previous instance crashed) and the job overrides it. No manual intervention required.
 

@@ -1,0 +1,26 @@
+@startuml
+actor Client
+participant "ReservationController" as RC
+participant "ReservationService" as RS
+participant "ReservationFactory" as RF
+participant "InventoryService" as IS
+participant "InventoryJpaRepository" as IR
+participant "ReservationJpaRepository" as RR
+participant "EventPublisher" as EP
+
+Client -> RC: POST /api/v1/reservations\n{orderId, items}
+RC -> RS: reserve(orderId, items)
+RS -> RR: findByOrderId(orderId)
+RR --> RS: empty
+RS -> RF: createPendingReservation(orderId, items)
+RF --> RS: Reservation (PENDING)
+RS -> IS: allocateStock(SkuAllocationOrder)
+IS -> IR: findById(sku) / save(entity)
+IS --> RS: done
+RS -> RR: save(ReservationEntity)
+RR --> RS: ReservationEntity
+RS -> EP: publish(ReservationCreatedEvent)
+EP --> RS: logged + persisted
+RS --> RC: ReservationResponse
+RC --> Client: 201 Created
+@enduml
