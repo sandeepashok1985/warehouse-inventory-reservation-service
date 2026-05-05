@@ -1,0 +1,21 @@
+@startuml
+actor Client
+participant "ReservationController" as RC
+participant "ReservationService" as RS
+participant "ReservationJpaRepository" as RR
+participant "Reservation" as Domain
+participant "EventPublisher" as EP
+
+Client -> RC: POST /api/v1/reservations/{id}/confirm
+RC -> RS: confirm(id)
+RS -> RR: findByIdWithLock(id)\n(SELECT FOR UPDATE)
+RR --> RS: ReservationEntity
+RS -> RS: toDomain(entity)
+RS -> Domain: confirm()
+Domain --> RS: state = CONFIRMED
+RS -> RR: updateStatus("CONFIRMED")
+RS -> EP: publish(ReservationConfirmedEvent)
+EP --> RS: logged + persisted
+RS --> RC: ReservationResponse
+RC --> Client: 200 OK
+@enduml

@@ -1,0 +1,37 @@
+@startuml
+package "API Layer" as api {
+  [HealthController]
+  [InventoryController]
+  [ReservationController]
+  [GlobalExceptionHandler]
+  [ApiKeyAuthenticationFilter]
+}
+package "Application Layer" as app {
+  [InventoryService]
+  [ReservationService]
+  [ReservationExpiryJob]
+  [InProcessEventPublisher]
+  [ReservationEventRelay]
+}
+package "Domain Layer" as domain {
+  [Reservation]
+  [Inventory]
+  [ReservationState]
+  [ReservationFactory]
+  [ReservationItem]
+}
+package "Infrastructure Layer" as infra {
+  [JPA Entities]
+  [Spring Data Repositories]
+  [ReservationMapper]
+  [NatsEventPublisher]
+  [NatsOutboxRelay]
+  [ClockConfig]
+  [SecurityConfig]
+}
+
+api --> app
+app --> domain
+infra --> domain
+infra --> app
+@enduml

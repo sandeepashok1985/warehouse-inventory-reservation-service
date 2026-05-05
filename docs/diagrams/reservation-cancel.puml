@@ -1,0 +1,27 @@
+@startuml
+actor Client
+participant "ReservationController" as RC
+participant "ReservationService" as RS
+participant "ReservationJpaRepository" as RR
+participant "InventoryService" as IS
+participant "InventoryJpaRepository" as IR
+participant "Reservation" as Domain
+participant "EventPublisher" as EP
+
+Client -> RC: POST /api/v1/reservations/{id}/cancel
+RC -> RS: cancel(id)
+RS -> RR: findByIdWithLock(id)\n(SELECT FOR UPDATE)
+RR --> RS: ReservationEntity
+RS -> RS: toDomain(entity)
+RS -> Domain: cancel()
+Domain --> RS: state = CANCELLED
+RS -> IS: releaseStock(items)
+IS -> IR: findBySkuWithLock(sku)\n(SELECT FOR UPDATE)
+IS -> IR: save(entity)
+IS --> RS: done
+RS -> RR: updateStatus("CANCELLED")
+RS -> EP: publish(ReservationCancelledEvent)
+EP --> RS: logged + persisted
+RS --> RC: ReservationResponse
+RC --> Client: 200 OK
+@enduml

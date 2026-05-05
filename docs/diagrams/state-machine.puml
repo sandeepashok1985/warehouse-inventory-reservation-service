@@ -1,0 +1,10 @@
+@startuml
+[*] --> PENDING : reserve()
+PENDING --> CONFIRMED : confirm()
+PENDING --> CANCELLED : cancel() / expire()
+CONFIRMED --> [*]
+CANCELLED --> [*]
+note right of PENDING : Can confirm or cancel
+note right of CONFIRMED : Terminal — no further transitions
+note right of CANCELLED : Terminal — no further transitions
+@enduml

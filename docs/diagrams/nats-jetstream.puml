@@ -1,0 +1,47 @@
+@startuml
+actor Client
+participant "ReservationService" as RS
+participant "ReservationJpaRepository" as RR
+participant "InProcessEventPublisher" as IPEP
+participant "AuditEventSubscriber" as Audit
+participant "NatsEventPublisher" as NATS
+participant "JetStream\nRESERVATIONS" as JS
+participant "Downstream\nConsumer A" as ConsA
+participant "Downstream\nConsumer B" as ConsB
+
+Client -> RS: POST /api/v1/reservations
+group @Transactional boundary
+  RS -> RR: save(ReservationEntity + items)
+  RS -> IPEP: publish(event)
+  IPEP -> Audit: on(event)
+  Audit -> RR: save(ReservationEventEntity)
+  IPEP -> NATS: on(event)
+  note right of NATS: catches IOException — never throws
+  NATS -> JS: jetStream.publish(subject, payload,\n  messageId=reservationId+eventType)
+  JS --> NATS: PublishAck
+  note right of JS: 2-minute dedup window
+end
+RR --> RS: commit (all-or-nothing)
+
+RS --> Client: 201 Created
+
+|||
+== After commit (separate consumer thread) ==
+
+JS -> ConsA: deliver (AckExplicit)
+ConsA --> JS: ACK
+JS -> ConsB: deliver (AckExplicit)
+ConsB --> JS: ACK
+
+|||
+== Outbox Recovery (if NATS was down) ==
+
+participant "NatsOutboxRelay" as Relay
+
+Relay -> RR: findTop50ByPublishedAtIsNull()
+RR --> Relay: unpublished events
+Relay -> NATS: reconstruct + publish
+NATS -> JS: jetStream.publish(retry)
+JS --> NATS: PublishAck
+Relay -> RR: SET published_at = now
+@enduml
